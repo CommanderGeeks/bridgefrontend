@@ -1,0 +1,32 @@
+version: 2.1
+
+jobs:
+  deploy-production:
+    parameters:
+      image:
+        type: string
+      deploy-file:
+        type: string
+    docker:
+      - image: cimg/node:16.20.1
+      - image: arvindr226/alpine-ssh
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: docker build -t <<parameters.image>> .
+      - run: docker login $DOCKER_REGISTRY -u  $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+      - run: docker tag <<parameters.image>> $DOCKER_REGISTRY/<<parameters.image>>
+      - run: docker push $DOCKER_REGISTRY/<<parameters.image>>
+      - run: ssh -oStrictHostKeyChecking=no -v $USER@$IP "bash <<parameters.deploy-file>>"
+
+workflows:
+  build-project:
+    jobs:
+      - deploy-production:
+          image: wizbridge-ui
+          deploy-file: ~/deploy/wizbridge-ui.sh
+          filters:
+            branches:
+              only:
+                - main

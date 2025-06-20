@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: rgb(6 7 12 );
+    color: #fff;
+}
+
+.gradient-bg {
+    background: linear-gradient(45deg, #D92153, #3B3B44, #3B3B44, #142663, #142663, #142663);
+}
