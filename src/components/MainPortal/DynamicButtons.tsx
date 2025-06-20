@@ -1,3 +1,4 @@
+// src/components/MainPortal/DynamicButtons.tsx
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { INetwork, IToken } from "../../config/types";
 import Button from "../Button";
@@ -9,6 +10,7 @@ import { useAllowance } from "../../hooks/useCalls";
 import { fromDecimals } from "../../utils/formatBalance";
 import { useApprove } from "../../hooks/useApprove";
 import DepositButton from "./DepositButton";
+import { getTokenDecimalsFromToken } from "../../utils/tokenHelpers";
 
 interface IProps {
   fromChain: INetwork;
@@ -41,7 +43,10 @@ function DynamicButton({
   const { open } = useWeb3Modal();
 
   const allowance = useAllowance(originToken, fromChain.bridgeAddress);
-  const allowanceVal = fromDecimals(allowance, originToken.decimals);
+  
+  // Use per-chain decimals for allowance calculation
+  const tokenDecimals = getTokenDecimalsFromToken(originToken, fromChain.chainId);
+  const allowanceVal = fromDecimals(allowance, tokenDecimals);
 
   const { onApproveBridge } = useApprove(
     amount.toNumber(),

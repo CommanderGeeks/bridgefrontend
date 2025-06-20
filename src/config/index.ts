@@ -1,3 +1,4 @@
+// src/config/index.ts
 import chains from "./chains";
 import { IToken } from "./types";
 
@@ -10,8 +11,18 @@ export const chainIds: number[] = [...Object.values(chains)]
 
 export const dummyToken: IToken = {
   key: "Unknown",
-  address: "0x0000000000000000000000000000000000000000",
+  address: {
+    20001: "0x0000000000000000000000000000000000000000",
+    420000: "0x0000000000000000000000000000000000000000",
+    8453: "0x0000000000000000000000000000000000000000",
+    56: "0x0000000000000000000000000000000000000000",
+  },
   name: "Unknown",
   symbol: "Unknown",
-  decimals: 6,
+  decimals: {
+    20001: 6,
+    420000: 18,
+    8453: 18,
+    56: 18,
+  },
 };

@@ -1,3 +1,4 @@
+// src/components/ListAssets.tsx
 import { Combobox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Fragment, useContext, useMemo, useState } from "react";
@@ -9,6 +10,29 @@ interface ListAssetsProps {
   token: IToken;
   chainId: number;
 }
+
+// Fallback icon component for missing token icons
+const TokenIcon = ({ symbol, className }: { symbol: string; className: string }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (imageError) {
+    // Fallback to a simple circle with token symbol
+    return (
+      <div className={`${className} bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold rounded-full`}>
+        {symbol.slice(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={`/assets/${symbol.toLowerCase()}.png`}
+      alt={symbol}
+      className={className}
+      onError={() => setImageError(true)}
+    />
+  );
+};
 
 function ListAssets({ token, chainId }: ListAssetsProps) {
   const { setTokenKey } = useContext(StateContext);
@@ -31,9 +55,8 @@ function ListAssets({ token, chainId }: ListAssetsProps) {
       <Combobox value={token} onChange={(e) => setTokenKey(e.key)}>
         <div className="relative w-full cursor-default overflow-hidden rounded-lg text-left shadow-md sm:text-sm">
           <Combobox.Button className="flex relative w-full cursor-default rounded-lg py-1 pl-3 text-left  sm:text-sm">
-            <img
-              src={`/assets/${token.symbol.toLowerCase()}.png`}
-              alt="asset"
+            <TokenIcon
+              symbol={token.symbol}
               className="h-6 w-6 mt-2 flex-shrink-0 rounded-full"
             />
             <Combobox.Input
@@ -74,9 +97,8 @@ function ListAssets({ token, chainId }: ListAssetsProps) {
                 >
                   {({ selected, active }) => (
                     <div className="flex items-center">
-                      <img
-                        src={`/assets/${cToken.symbol.toLowerCase()}.png`}
-                        alt="asset"
+                      <TokenIcon
+                        symbol={cToken.symbol}
                         className="h-6 w-6 flex-shrink-0 rounded-full mr-2"
                       />
                       <span

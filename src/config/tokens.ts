@@ -1,3 +1,4 @@
+// src/config/tokens.ts
 import { IToken } from "./types";
 
 const tokens: IToken[] = [
@@ -9,21 +10,29 @@ const tokens: IToken[] = [
         },
         name: "INFINAEON",
         symbol: "INF",
-        decimals: 18,
+        decimals: {
+            20001: 9, // SOL chain uses 9 decimals
+            420000: 18, // Infinaeon chain uses 18 decimals
+        },
     },
     {
         key: "SELECT",
         symbol: "SELECT",
         address: {
             56: "",
-             42161: "",
-             8453: "",
-               420000: "",
-               20001: "",
-
+            42161: "",
+            8453: "",
+            420000: "",
+            20001: "",
         },
         name: "SELECT",
-        decimals: 6,
+        decimals: {
+            56: 6,
+            42161: 6,
+            8453: 6,
+            420000: 6,
+            20001: 6,
+        },
     },
     {
         key: "SHAMAN",
@@ -33,7 +42,10 @@ const tokens: IToken[] = [
         },
         name: "American Shaman",
         symbol: "SHAMAN",
-        decimals: 6,
+        decimals: {
+            20001: 6, // SOL chain
+            420000: 6, // Infinaeon chain
+        },
     },
     {
         key: "GEEKS",
@@ -43,7 +55,10 @@ const tokens: IToken[] = [
         },
         name: "Geeks",
         symbol: "Geeks",
-        decimals: 18,
+        decimals: {
+            56: 18, // BSC
+            8453: 18, // Base
+        },
     },
     {
         key: "DEFIRE",
@@ -53,7 +68,24 @@ const tokens: IToken[] = [
         },
         name: "DeFire",
         symbol: "DeFire",
-        decimals: 18,
+        decimals: {
+            56: 18, // BSC
+            8453: 18, // Base
+        },
+    },
+    // NEW: Yafa token with different decimals on each chain
+    {
+        key: "Yafa",
+        address: {
+            20001: "YAFAJvjUv9MVAKcTE7Y8ouo45QNKVK6fCMzdxt2tjPs", // Solana address
+            8453: "0xE51f9bb2E4Fe0AB024dDCD2DAFD600073B579342", // Base address
+        },
+        name: "Yafa",
+        symbol: "Yafa",
+        decimals: {
+            20001: 6, // SOL chain uses 6 decimals
+            8453: 9, // Base chain uses 9 decimals
+        },
     },
 ];
 

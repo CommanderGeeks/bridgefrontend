@@ -1,3 +1,4 @@
+// src/pages/Portal/EvmPortal.tsx
 import { useContext, useEffect, useMemo, useState } from "react";
 import ListAssets from "../../components/ListAssets";
 import { chainIds, SOLANA_CHAIN_ID } from "../../config";
@@ -20,7 +21,7 @@ import AlertBox from "../../components/MainPortal/AlertBox";
 import Input from "../../components/Input";
 import DestinationChain from "../../components/MainPortal/DestinationChain";
 import tokens from "../../config/tokens";
-import { getChainTokens } from "../../utils/tokenHelpers";
+import { getChainTokens, getTokenDecimalsFromToken } from "../../utils/tokenHelpers";
 import {
   isValidEvmAddress,
   isValidSolanaAddress,
@@ -43,6 +44,7 @@ function EvmPortal() {
     if (!tokenKey) return chainTokens[0];
     return chainTokens.find((t: any) => t.key === tokenKey) || chainTokens[0];
   }, [tokenKey, fromChain]);
+  
   const destToken: IToken = useMemo(() => {
     return tokens.find((t: any) => t.key === tokenKey) || originToken;
   }, [tokenKey, originToken]);
@@ -53,102 +55,89 @@ function EvmPortal() {
   const [txHash, setTxHash] = useState("");
 
   const mintable = useMintable(originToken, fromChain.bridgeAddress);
-  const maxTx = useMaxTx(originToken, fromChain.bridgeAddress);
   const minTx = useMinTx(originToken, fromChain.bridgeAddress);
-  const balance = useBalance(originToken);
-  const feesAmount = useComputeFees(
-    amount.toString(),
-    fromChain.bridgeAddress,
-    originToken
-  );
+  const maxTx = useMaxTx(originToken, fromChain.bridgeAddress);
+  const balance = useBalance(originToken, fromChain.bridgeAddress);
+  const feesVal = useComputeFees(amount.toString(), originToken, fromChain.bridgeAddress);
 
-  const maxTxVal = fromDecimals(maxTx, originToken.decimals);
-  const minTxVal = fromDecimals(minTx, originToken.decimals);
-  const balanceVal = fromDecimals(balance, originToken.decimals);
-  const feesVal = fromDecimals(feesAmount, originToken.decimals);
-  const addressError = useMemo(() => {
-    let err = null;
-    if (toChain.chainId === SOLANA_CHAIN_ID) {
-      if (!isValidSolanaAddress(receiver)) err = "Invalid sol receiver address";
-    } else {
-      if (!isValidEvmAddress(receiver)) err = "Invalid receiver address";
-    }
-
-    return err;
-  }, [receiver, toChain]);
+  // Use per-chain decimals for calculations
+  const originTokenDecimals = getTokenDecimalsFromToken(originToken, fromChain.chainId);
+  const destTokenDecimals = getTokenDecimalsFromToken(destToken, toChain.chainId);
+  
+  const maxTxVal = fromDecimals(maxTx, originTokenDecimals);
+  const minTxVal = fromDecimals(minTx, originTokenDecimals);
+  const balanceVal = fromDecimals(balance, originTokenDecimals);
 
   useEffect(() => {
-    const err = amount.gt(balance)
+    const err = amount.gt(balanceVal)
       ? "Insufficient balance"
-      : addressError
-      ? addressError
+      : toChain.chainId === SOLANA_CHAIN_ID
+      ? !isValidSolanaAddress(receiver)
+        ? "Invalid receiver address, please check"
+        : ""
+      : !isValidEvmAddress(receiver)
+      ? "Invalid receiver address, please check"
       : amount.lt(minTxVal)
       ? "Amount too small"
       : amount.gt(maxTxVal)
-      ? "Amount is beyond limit"
+      ? "Amount too large"
       : "";
 
     setError(err);
+    setShowError(!!err);
   }, [
-    addressError,
-    error,
     amount,
-    balance,
+    balanceVal,
     receiver,
     minTxVal,
     maxTxVal,
-    mintable,
+    toChain.chainId,
     setError,
+    setShowError,
   ]);
 
   return (
-    <>
-      <div className="flex flex-wrap items-center justify-between my-2 mt-0">
-        <OriginChain fromChain={fromChain} />
+    <div className="bg-black-100 border border-zinc-800 w-full md:w-[450px] p-6 rounded-2xl shadow-lg">
+      <div className="flex justify-between items-center">
+        <h1 className="text-lg font-bold text-white">Bridge Tokens</h1>
+      </div>
+
+      <div className="mt-4 ">
+        <div className="w-full text-white">Origin Chain</div>
+        <OriginChain fromChain={fromChain} tokenKey={tokenKey} />
 
         <div className="mt-4">
-          <div className="">
-            Balance: {formatNumber(balanceVal)}
-            <button
-              onClick={() => setAmount(balanceVal)}
-              className="text-white pl-3"
-            >
-              {" "}
-              Max
-            </button>
-          </div>
+          <div className="text-white">Amount</div>
           <div className="flex">
-            <div className="relative w-[60%] mr-2">
+            <div className="relative w-[70%] mr-2">
               <Input
-                onFocus={() => setShowError(false)}
-                onBlur={() => setShowError(true)}
+                balance={balanceVal}
+                amount={amount}
+                setAmount={setAmount}
+                decimals={originTokenDecimals} // Use origin chain decimals
                 type="number"
-                onChange={(e: any) => {
-                  setAmount(new BigNumber(e.target.value));
-                }}
-                value={amount.toString()}
-                placeholder="0.00"
               />
             </div>
-            <div className="w-[40%]">
-              <ListAssets chainId={fromChain.chainId} token={originToken} />
+            <div className="w-[30%] relative bg-dark text-center px-4 pl-3 py-[10px] rounded-lg shadow-md sm:text-sm">
+              <ListAssets token={originToken} chainId={fromChain.chainId} />
             </div>
           </div>
         </div>
-        <div className="mt-4 w-full">
-          <div className="">Payout address</div>
-          <Input
-            onChange={(e: any) => {
-              setReceiver(e.target.value);
-            }}
+
+        <div className="mt-4">
+          <div className="text-white">Receiver Address</div>
+          <input
             value={receiver}
+            onChange={(e) => setReceiver(e.target.value)}
+            className="py-3 px-4 w-full shadow-lg rounded-lg bg-dark border-0 text-white font-medium sm:text-sm"
+            placeholder="Enter receiver address"
             type="text"
           />
         </div>
       </div>
 
       <div className="mt-8 ">
-        <div className="w-full">Destination Chain</div>
+        <div className="w-full text-white">Destination Chain</div>
 
         <DestinationChain
           toChain={toChain}
@@ -159,11 +148,11 @@ function EvmPortal() {
         />
 
         <div className="mt-4">
-          <div className="">Receiving</div>
+          <div className="text-white">Receiving</div>
           <div className="flex">
             <div className="relative w-[70%] mr-2">
               <input
-                value={formatNumber(amount.minus(feesVal))}
+                value={formatNumber(amount.minus(feesVal), 6)}
                 type="text"
                 disabled
                 className="py-3 w-full shadow-lg rounded-lg bg-dark border-0 text-white font-medium sm:text-sm"
@@ -175,11 +164,9 @@ function EvmPortal() {
                 className="flex items-center w-full rounded-lg text-left  sm:text-sm"
                 type="button"
               >
-                <img
-                  src={`/assets/${destToken.symbol.toLowerCase()}.png`}
-                  alt="asset"
-                  className="h-5 w-5 rounded-full "
-                />
+                <div className="h-5 w-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                  {destToken.symbol.slice(0, 2).toUpperCase()}
+                </div>
                 <div className=" ml-2 mr-10 text-sm font-bold text-gray-400 bg-dark focus:ring-0">
                   {destToken.symbol}
                 </div>
@@ -189,65 +176,25 @@ function EvmPortal() {
         </div>
       </div>
 
-      <div className="container max-w-8xl mx-auto mb-auto">
-        <div className="mt-6 p-4 rounded-md border border-gray-500 text-[14px] font-semibold">
-          <div className="flex justify-between">
-            <div>Fees:</div>
-            <div>
-              {formatNumber(feesVal)} {originToken.symbol}{" "}
-            </div>
-          </div>
-
-          <div className="flex justify-between">
-            <div>Estimated time:</div>
-            <div>~3mins </div>
-          </div>
-
-          <hr className="h-px my-2 bg-gray-200 border-0 dark:bg-gray-700" />
-
-          <div className="flex justify-between">
-            <div> Min bridge amount: </div>
-            <div>
-              {formatNumber(minTxVal)} {originToken.symbol}
-            </div>
-          </div>
-
-          <div className="flex justify-between">
-            <div>Max bridge amount</div>
-            <div>
-              {formatNumber(maxTxVal)} {originToken.symbol}{" "}
-            </div>
-          </div>
-        </div>
-
+      <div className="mt-6">
         <DynamicButton
+          amount={amount}
+          originToken={originToken}
           fromChain={fromChain}
           toChain={toChain}
-          trxInProgress={trxInProgress}
-          originToken={originToken}
-          amount={amount}
           receiver={receiver}
+          trxInProgress={trxInProgress}
           setTrxInProgress={setTrxInProgress}
-          setError={setError}
           setTxHash={setTxHash}
           error={error}
+          setError={setError}
         />
-
-        {txHash && (
-          <AlertBox>
-            Tokens have been deposited please wait for confirmation.
-            <a
-              href={fromChain.explorer + "/tx/" + txHash}
-              target="_blank"
-              rel="noreferrer"
-              className="underline"
-            >
-              View tx
-            </a>
-          </AlertBox>
-        )}
       </div>
-    </>
+
+      <div className="mt-4">
+        <AlertBox />
+      </div>
+    </div>
   );
 }
 

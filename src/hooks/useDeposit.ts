@@ -1,7 +1,9 @@
+// src/hooks/useDeposit.ts
 import { useCallback } from "react";
 import { useBridgeContract } from "./useContract";
 import { INetwork, IToken } from "../config/types";
 import { toDecimals } from "../utils/formatBalance";
+import { getTokenDecimalsFromToken } from "../utils/tokenHelpers";
 
 export const useDepositTokens = function (
   amount: string,
@@ -18,7 +20,10 @@ export const useDepositTokens = function (
       if (Number(chain.chainId) === destChainId) {
         return { error: "Cannot bridge to same chain" };
       }
-      const amountFormatted = toDecimals(amount || "0", token.decimals);
+      
+      // Use per-chain decimals instead of global decimals
+      const tokenDecimals = getTokenDecimalsFromToken(token, chain.chainId);
+      const amountFormatted = toDecimals(amount || "0", tokenDecimals);
       console.log(amountFormatted.toFixed());
 
       const params = [

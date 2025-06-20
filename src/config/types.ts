@@ -1,11 +1,15 @@
+// src/config/types.ts
 export interface IToken {
   key: string;
   address: {
     [chainId: number]: string;
   };
+  // New: decimals per chain instead of global decimals
+  decimals: {
+    [chainId: number]: number;
+  };
   name: string;
   symbol: string;
-  decimals: number;
 }
 
 export interface INetworks {
