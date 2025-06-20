@@ -60,7 +60,7 @@ function SolanaPortal() {
   const balanceVal = fromDecimals(balance, originTokenDecimals);
 
   useEffect(() => {
-    const err = amount.gt(balance)
+    const err = amount.gt(balanceVal)
       ? "Insufficient balance"
       : !isValidEvmAddress(receiver)
       ? "Invalid receiver address, please check"
@@ -74,7 +74,7 @@ function SolanaPortal() {
     setShowError(!!err);
   }, [
     amount,
-    balance,
+    balanceVal,
     receiver,
     minTxVal,
     maxTxVal,
@@ -97,10 +97,9 @@ function SolanaPortal() {
           <div className="flex">
             <div className="relative w-[70%] mr-2">
               <Input
-                balance={balanceVal}
-                amount={amount}
-                setAmount={setAmount}
-                decimals={originTokenDecimals} // Use origin chain decimals
+                value={amount.toString()}
+                onChange={(e: any) => setAmount(new BigNumber(e.target.value || "0"))}
+                placeholder="0.00"
                 type="number"
               />
             </div>
@@ -112,10 +111,9 @@ function SolanaPortal() {
 
         <div className="mt-4">
           <div className="text-white">Receiver Address</div>
-          <input
+          <Input
             value={receiver}
-            onChange={(e) => setReceiver(e.target.value)}
-            className="py-3 px-4 w-full shadow-lg rounded-lg bg-dark border-0 text-white font-medium sm:text-sm"
+            onChange={(e: any) => setReceiver(e.target.value)}
             placeholder="Enter receiver address"
             type="text"
           />
@@ -137,11 +135,10 @@ function SolanaPortal() {
           <div className="text-white">Receiving</div>
           <div className="flex">
             <div className="relative w-[70%] mr-2">
-              <input
+              <Input
                 value={formatNumber(amount.minus(feesVal), 6)}
                 type="text"
                 disabled
-                className="py-3 w-full shadow-lg rounded-lg bg-dark border-0 text-white font-medium sm:text-sm"
                 placeholder="0.00"
               />
             </div>

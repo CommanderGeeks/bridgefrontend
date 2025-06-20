@@ -1,3 +1,4 @@
+// src/hooks/solana/useSolCalls.ts
 import { useEffect, useState } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { BigNumber } from "bignumber.js";
@@ -7,6 +8,7 @@ import { IToken } from "../../config/types";
 import { decodeConfigAccount, RawConfig } from "../../utils/solana";
 import useRefresh from "../useRefresh";
 import { SOLANA_CHAIN_ID } from "../../config";
+import { getTokenDecimalsFromToken } from "../../utils/tokenHelpers";
 
 export const useBridgeConfig = () => {
   const [config, setConfig] = useState<RawConfig | null>(null);
@@ -31,7 +33,7 @@ export const useBridgeConfig = () => {
     };
 
     fetchConfig();
-    // @ts-nocheck
+    // @ts-ignore
   }, [fastRefresh]);
 
   return config;

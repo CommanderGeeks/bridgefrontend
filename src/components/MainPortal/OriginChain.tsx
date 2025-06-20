@@ -1,3 +1,4 @@
+// src/components/MainPortal/OriginChain.tsx
 import { useSwitchChain } from "wagmi";
 import { INetwork } from "../../config/types";
 import ListChains from "../ListChains";
@@ -6,9 +7,10 @@ import { useMemo } from "react";
 
 interface IProps {
   fromChain: INetwork;
+  tokenKey?: string; // Add optional tokenKey prop
 }
 
-function OriginChain({ fromChain }: IProps) {
+function OriginChain({ fromChain, tokenKey }: IProps) {
   const { switchChain } = useSwitchChain();
 
   const chainList = useMemo(() => {
@@ -33,6 +35,7 @@ function OriginChain({ fromChain }: IProps) {
         chainList={chainList}
         chain={fromChain}
         toggleChain={(val) => switchChain({ chainId: val })}
+        tokenKey={tokenKey}
       />
     </div>
   );
